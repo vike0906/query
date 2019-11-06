@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<div th:replace="module::head"></div>
+<body ontouchstart class="page-bg">
+<div class="page-hd">
+    <!--<h1 class="page-hd-title c_center">-->
+        <!--个人征信查询-->
+    <!--</h1>-->
+    <!--<p class="page-hd-desc" th:text="'客户ID:'+${fansId}"></p>-->
+    <div class="img-box">
+        <img src="/img/banner01.png" style="max-width: 100%;  height: auto;">
+    </div>
+</div>
+<div class="page-bd-10">
+    <div class="weui-cells weui-cells_form">
+        <form id="queryForm" method="post" action="/view/query-summit">
+            <div class="weui-cell">
+                <div class="weui-cell__hd"><label class="weui-label">姓名</label></div>
+                <div class="weui-cell__bd">
+                    <input class="weui-input" id="userName" name="userName" placeholder="请输入真实姓名" type="text">
+                </div>
+            </div>
+            <div class="weui-cell">
+                <div class="weui-cell__hd"><label class="weui-label">身份证号</label></div>
+                <div class="weui-cell__bd">
+                    <input class="weui-input" id="idNo" name="idNo" placeholder="请输入身份证号" type="text">
+                </div>
+            </div>
+            <div class="weui-cell">
+                <div class="weui-cell__hd"><label class="weui-label">信用卡号</label></div>
+                <div class="weui-cell__bd">
+                    <input class="weui-input" id="creditCardNo" name="creditCardNo" placeholder="请输入信用卡号" type="number">
+                </div>
+            </div>
+            <div class="weui-cell">
+                <div class="weui-cell__hd"><label class="weui-label">手机号</label></div>
+                <div class="weui-cell__bd">
+                    <input class="weui-input" id="phone" name="phone" placeholder="请输入手机号" type="number">
+                </div>
+            </div>
+            <div class="weui-cell">
+                <div class="weui-cell__hd">
+                    <label class="weui-label">验证码</label>
+                </div>
+                <div class="weui-cell__bd">
+                    <input class="weui-input" id="authCode" name="authCode" placeholder="验证码" type="number">
+                </div>
+                <div class="weui-cell__ft">
+                    <button  type="button" class="weui-vcode-btn" onclick="gainVerificationCode(this)">获取验证码</button>
+                </div>
+            </div>
+            <input id="fansId" name="fansId" th:value="1" type="hidden">
+            <input id="orderNo" name="orderNo" type="hidden">
+        </form>
+    </div>
+    <div  class="weui-agree">
+        <input id="isAgree"  type="checkbox" onclick="isAgreeChange()" checked style="vertical-align:middle;"/>
+        <span class="weui-agree__text" style="vertical-align:baseline;">
+                阅读并同意<a href="/view/agreement" style="vertical-align:baseline;">《相关条款》</a>
+        </span>
+    </div>
+    <div class="weui-btn-area">
+        <button class="weui-btn weui-btn_primary" id="query_button" onclick="checkVerificationCode()">查询</button>
+    </div>
+</div>
+<div class="weui-loadmore weui-loadmore_line weui-loadmore_dot" style="width: 100%"></div>
+<div class="page-bd-10">
+    <div class="weui-panel weui-panel_access">
+        <!--<div class="weui-panel__hd">文字组合列表</div>-->
+        <div class="weui-panel__bd">
+            <div class="weui-media-box weui-media-box_text">
+                <h4 class="weui-media-box__title">温馨提示</h4>
+                <p class="weui-media-box__desc">1. 两个月内新卡请勿测评，否则查无结果；</p>
+                <p class="weui-media-box__desc">2. 近半年未做交易的卡请勿测评，否则查无结果；</p>
+                <p class="weui-media-box__desc">3. 卡测评产品会校验用户输入的四要素信息一致性，四要素不一致，不返回结果；</p>
+                <p class="weui-media-box__desc">4. 历史订单有效期：3 个月。</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+    function pay(data) {
+        function onBridgeReady(){
+            WeixinJSBridge.invoke(
+                'getBrandWCPayRequest', {
+                    "appId":data.appId,     //公众号名称，由商户传入
+                    "timeStamp":data.timeStamp,         //时间戳，自1970年以来的秒数
+                    "nonceStr":data.nonceStr, //随机串
+                    "package":data.packageStr,
+                    "signType":data.signType,         //微信签名方式：
+                    "paySign":data.paySign//微信签名
+                },
+                function(res){
+                    if(res.err_msg == "get_brand_wcpay_request:ok" ){
+                        // 使用以上方式判断前端返回,微信团队郑重提示：
+                        //res.err_msg将在用户支付成功后返回ok，但并不保证它绝对可靠。
+                        //TODO 支付成功,后台确认支付结果,进行查询业务
+
+                    }else if(res.err_msg == "get_brand_wcpay_request:cancel"){
+                        //TODO 取消支付
+                        //TODO 通知后台
+                    }else if(res.err_msg == "get_brand_wcpay_request:fail"){
+                        //TODO 支付失败
+                        //TODO 通知后台
+                    }else{
+                        //TODO 后台确认支付结果
+                    }
+                });
+        }
+        if (typeof WeixinJSBridge == "undefined"){
+            if( document.addEventListener ){
+                document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+            }else if (document.attachEvent){
+                document.attachEvent('WeixinJSBridgeReady', onBridgeReady);
+                document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
+            }
+        }else{
+            onBridgeReady();
+        }
+    }
+
+
+    function checkVerificationCode() {
+
+        var resp = baseQuery();
+        if(resp == 1){
+            return;
+        }
+
+        var orderNo = $("#orderNo").val();
+        var authCode = $("#authCode").val();
+        if(orderNo.length!=18){
+            $.toast("请先获取验证码","cancel");
+            return;
+        }
+        if(authCode.length==0||authCode.length!=6){
+            $.toast(authCode.length==0?"验证码不能为空":"验证码格式错误","cancel");
+            return;
+        }
+
+        var params = {orderNo:orderNo, code:authCode};
+        ajaxPost('/query/check', params, function (response) {
+            $.hideLoading();
+            if(response.code == 1){
+                $.toast(response.message,'success');
+                // 获取appId，timeStamp，nonceStr， package， signType， paySign 发起支付
+                console.log(response.data);
+                pay(response.data);
+            }else {
+                //失败
+                $.toast(response.message, "cancel");
+                return;
+            }
+        });
+
+    }
+    function gainVerificationCode(obj) {
+
+        var resp = baseQuery();
+        if(resp == 1){
+            return;
+        }
+
+        var userName = $("#userName").val();
+        var idNo = $("#idNo").val();
+        var creditCardNo = $("#creditCardNo").val();
+        var phone = $("#phone").val();
+        var fansId = $("#fansId").val();
+        var params = {fansId:fansId, userName:userName, idNo:idNo, creditCardNo:creditCardNo, phone:phone};
+        ajaxPost('/query/gain', params, function (response) {
+            $.hideLoading();
+            if(response.code == 0){
+                $("#orderNo").val(response.message);
+                $.toast("验证码已发送",'success');
+            }else {
+                $.toast.prototype.defaults.duration=2000;//2秒
+                $.toast("验证码获取失败，请稍后重试","cancel");
+                return;
+            }
+        });
+
+        countdown(obj);
+    }
+    function baseQuery() {
+        var userName = $("#userName").val();
+        var idNo = $("#idNo").val();
+        var creditCardNo = $("#creditCardNo").val();
+        var phone = $("#phone").val();
+
+        if(userName.length==0){
+            $.toast("用户名不能为空","cancel");
+            return 1;
+        }
+        if(idNo.length==0){
+            $.toast("身份证号不能为空","cancel");
+            return 1;
+        }
+        if(creditCardNo.length==0){
+            $.toast("信用卡号不能为空","cancel");
+            return 1;
+        }
+        if(phone.length==0){
+            $.toast("手机号不能为空","cancel");
+            return 1;
+        }
+
+
+        var reg =/^[\u4e00-\u9fa5]{2,4}$/;
+        if(reg.test(userName)==false){
+            $.toast("请输入真实姓名","cancel");
+            return 1;
+        }
+
+        var reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/;
+        if(reg.test(idNo)==false){
+            $.toast("身份证号输入不合法","cancel");
+            return 1;
+        }
+
+        if(creditCardNo.length<12||creditCardNo.length>19){
+            $.toast("信用卡号输入错误","cancel");
+            return 1;
+        }
+
+        var reg = /^[1][3,4,5,7,8,9][0-9]{9}$/;
+        if(reg.test(phone)==false){
+            $.toast("请输入正确的手机号","cancel");
+            return 1;
+        }
+        return 0;
+
+    }
+    function isAgreeChange() {
+        var check = $("#isAgree").prop("checked");
+        console.log(check);
+        if(check){
+            $("#query_button").removeAttr("disabled");
+            $("#query_button").removeClass("weui-btn_disabled");
+        }else {
+            $("#query_button").attr("disabled","disabled");
+            $("#query_button").addClass("weui-btn_disabled");
+        }
+    }
+    var count = 5;
+    function countdown(obj) {
+        var code = $(obj);
+        if(count == 0){
+            code.removeAttr('disabled');
+            code.text("获取验证码");
+            count =5;
+            return;
+        }else{
+            code.text("重新发送(" + count + ")");
+            code.attr('disabled',true);
+            count--;
+        }
+        setTimeout(function() {
+            countdown(obj)}, 1000);
+    }
+</script>
+</body>
+</html>
