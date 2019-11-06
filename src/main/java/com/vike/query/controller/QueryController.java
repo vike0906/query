@@ -1,0 +1,79 @@
+package com.vike.query.controller;
+
+import com.vike.query.common.QueryException;
+import com.vike.query.service.QueryService;
+import com.vike.query.vo.Response;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * @author: lsl
+ * @createDate: 2019/10/24
+ */
+@RestController
+@Slf4j
+@RequestMapping("query")
+public class QueryController {
+
+    @Autowired
+    QueryService queryService;
+
+    @PostMapping("gain")
+    public Response gain(@RequestParam(required = false) Long fansId,
+                         @RequestParam(required = false) String agentTag,
+                         @RequestParam String userName,
+                         @RequestParam String idNo,
+                         @RequestParam String creditCardNo,
+                         @RequestParam String phone){
+        if(fansId == null) fansId=0L;
+        if(agentTag == null) agentTag = "agentTag";
+
+        try {
+            String orderNo = queryService.gainVerificationCode(fansId, agentTag, userName, idNo, creditCardNo, phone);
+            return new Response(Response.SUCCESS, orderNo);
+        }catch (QueryException e){
+            return new Response(Response.ERROR, e.getMessage());
+        }
+    }
+
+    /**创建查询订单*/
+    @PostMapping("check")
+    public Response check(@RequestParam String orderNo, @RequestParam String code){
+        try {
+            queryService.checkVerificationCode(orderNo, code);
+            return new Response(Response.SUCCESS,"验证通过");
+        }catch (QueryException e){
+            return new Response(Response.ERROR, e.getMessage());
+        }
+    }
+
+    @PostMapping("summit")
+    public Response summit(@RequestParam String userName,
+                         @RequestParam String idNo,
+                         @RequestParam String creditCardNo,
+                         @RequestParam String phone,
+                         @RequestParam String code,
+                         @RequestParam String orderNo){
+        try {
+            String url = queryService.queryCardData(userName, idNo, creditCardNo, phone, code, orderNo);
+            return new Response(Response.SUCCESS, url);
+        }catch (QueryException e){
+            return new Response(Response.ERROR, e.getMessage());
+        }
+    }
+
+    /**发起支付，获取预付单信息*/
+    //TODO 下单
+
+    /**查询支付结果*/
+
+    /**验证通过，查询并返回查询结果*/
+
+    /**全部查询结果*/
+
+
+}
