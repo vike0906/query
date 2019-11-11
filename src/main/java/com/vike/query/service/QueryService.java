@@ -9,7 +9,7 @@ import com.vike.query.common.QueryException;
 public interface QueryService {
 
     /**获取验证码*/
-    String gainVerificationCode(long fansId, String agentTag, String name, String idCard, String bankCard, String mobile) throws QueryException;
+    String gainVerificationCode(long fansId, String name, String idCard, String bankCard, String mobile) throws QueryException;
 
     /**验证码校验*/
     boolean checkVerificationCode(String orderNo, String code) throws QueryException;

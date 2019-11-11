@@ -1,5 +1,7 @@
 package com.vike.query.controller;
 
+import com.vike.query.component.WXApiInfoComment;
+import com.vike.query.dao.FansRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,34 +19,45 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class ViewController {
 
+    @Autowired
+    WXApiInfoComment wxApiInfoComment;
+    @Autowired
+    FansRepository fansRepository;
+
     @GetMapping("/")
-    public String root(ModelMap modelMap, @RequestParam(required = false) String code, @RequestParam(required = false) Integer state){
-        return index(modelMap,code,state);
+    public String root(ModelMap modelMap, @RequestParam(required = false) Long fansId, @RequestParam(required = false) String code, @RequestParam(required = false) String state){
+        return index(modelMap, fansId, code,state);
     }
 
     @GetMapping("view/index")
-    public String index(ModelMap modelMap, @RequestParam(required = false) String code, @RequestParam(required = false) Integer state){
-        long fansId = code2FansId(code);
+    public String index(ModelMap modelMap, @RequestParam(required = false) Long fansId,@RequestParam(required = false) String code, @RequestParam(required = false) String state){
+        if(fansId==null||fansId==0L){
+            fansId = code2FansId(code,state);
+        }
         modelMap.addAttribute("fansId",fansId);
         return "index";
     }
 
     @GetMapping("tag/{agentTag}")
     public String indexWithTag(ModelMap modelMap, @PathVariable String agentTag){
-        modelMap.addAttribute("agentTag","?agentTag="+agentTag);
+        modelMap.addAttribute("fansId",-1L);
+        modelMap.addAttribute("agentTag",agentTag);
         return "index";
     }
 
     @GetMapping("view/history")
-    public String history(ModelMap modelMap, @RequestParam(required = false) String code, @RequestParam(required = false) Integer state){
-        long fansId = code2FansId(code);
+    public String history(ModelMap modelMap,@RequestParam(required = false) Long fansId, @RequestParam(required = false) String code, @RequestParam(required = false) String state){
+        if(fansId==null||fansId==0L){
+            fansId = code2FansId(code,state);
+        }
+        //TODO fansID存在的话去查询历史记录
         modelMap.addAttribute("fansId",fansId);
         return "history";
     }
 
     @GetMapping("view/invite")
-    public String invite(ModelMap modelMap, @RequestParam(required = false) String code, @RequestParam(required = false) Integer state){
-        long fansId = code2FansId(code);
+    public String invite(ModelMap modelMap, @RequestParam(required = false) String code, @RequestParam(required = false) String state){
+        long fansId = code2FansId(code,state);
         modelMap.addAttribute("fansId",fansId);
         return "invite";
     }
@@ -79,11 +92,11 @@ public class ViewController {
         return "result";
     }
 
-    private long code2FansId(String code){
-//        long fansId = -1L;
-//        if(code!=null&&!"".equals(code)){
-//            fansId = wxApiInfoComment.getFansIdByCode(code);
-//        }
-        return -1;
+    private long code2FansId(String code,String state){
+        long fansId = -1L;
+        if(code!=null&&!"".equals(code)){
+            fansId = wxApiInfoComment.getFansIdByCode(code,state);
+        }
+        return fansId;
     }
 }

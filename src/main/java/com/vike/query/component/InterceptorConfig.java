@@ -40,6 +40,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
         unInterceptor.add("/query/gain");
         unInterceptor.add("/query/check");
         unInterceptor.add("/query/summit");
+        unInterceptor.add("/manager/create-menu");
 
         registry.addInterceptor(getInterceptor()).addPathPatterns("/**").excludePathPatterns(unInterceptor);
 //        registry.addInterceptor(getAdminInterceptor()).addPathPatterns("/admin/**").excludePathPatterns("/admin/operator/login");

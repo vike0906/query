@@ -4,15 +4,19 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.vike.query.common.*;
+import com.vike.query.dao.FansRepository;
+import com.vike.query.entity.Fans;
 import com.vike.query.pojo.VerificationCodeRequest;
 import com.vike.query.service.QueryService;
 import com.vike.query.util.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author: lsl
@@ -26,9 +30,11 @@ public class QueryServiceImpl implements QueryService {
     private String APP_ID;
     @Value("${system.hp.app_secret:app_secret}")
     private String APP_SECRET;
+    @Autowired
+    FansRepository fansRepository;
 
     @Override
-    public String gainVerificationCode(long fansId, String agentTag, String name, String idCard, String bankCard, String mobile) throws QueryException{
+    public String gainVerificationCode(long fansId, String name, String idCard, String bankCard, String mobile) throws QueryException{
 
         Map<String,String> paramsMap = new HashMap<>();
         paramsMap.put("account", APP_ID);
@@ -53,6 +59,9 @@ public class QueryServiceImpl implements QueryService {
             log.info("解析返回结果获得serialNumber：{}",serialNumber);
             VerificationCodeRequest vc = new VerificationCodeRequest();
             Long orderNoLong = Long.valueOf(orderNo);
+            Optional<Fans> op = fansRepository.findById(fansId);
+            String agentTag = "agentTag";
+            if(op.isPresent()) agentTag = op.get().getAgentTag();
             vc.setFansId(fansId).setAgentTag(agentTag).setOrderNo(orderNoLong).setSerialNumber(serialNumber)
                     .setRealName(name).setIdNO(idCard).setCreditCardNo(bankCard).setPhone(mobile);
             LocalCache.putVerificationCodeRequest(orderNoLong,vc);

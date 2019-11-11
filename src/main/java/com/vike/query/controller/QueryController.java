@@ -24,16 +24,14 @@ public class QueryController {
 
     @PostMapping("gain")
     public Response gain(@RequestParam(required = false) Long fansId,
-                         @RequestParam(required = false) String agentTag,
                          @RequestParam String userName,
                          @RequestParam String idNo,
                          @RequestParam String creditCardNo,
                          @RequestParam String phone){
         if(fansId == null) fansId=0L;
-        if(agentTag == null) agentTag = "agentTag";
 
         try {
-            String orderNo = queryService.gainVerificationCode(fansId, agentTag, userName, idNo, creditCardNo, phone);
+            String orderNo = queryService.gainVerificationCode(fansId, userName, idNo, creditCardNo, phone);
             return new Response(Response.SUCCESS, orderNo);
         }catch (QueryException e){
             return new Response(Response.ERROR, e.getMessage());
