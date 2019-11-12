@@ -86,9 +86,9 @@ public class WXApiInfoComment {
             }
             return fans.getId();
         }else{
-            if(state.length()==32){
+            if(state.length()==GlobalConstant.AGENT_TAG_LENGTH){
                 Fans fans = new Fans();
-                fans.setOpenId(openid).setIsSubscribe(3).setIsCollectInfo(3).setAgentTag(state);
+                fans.setOpenId(openid).setIsSubscribe(2).setIsCollectInfo(3).setAgentTag(state);
                 Fans fans1 = fansService.saveFans(fans);
                 return fans1.getId();
             }

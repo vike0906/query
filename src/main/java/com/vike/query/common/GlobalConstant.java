@@ -39,4 +39,7 @@ public class GlobalConstant {
 
     /**黑核科技查询征信结果*/
     public static final String HP_REPORT_CARD_NO_DATA = "http://api.hihippo.cn/api/reportCardNoData";
+
+    /**代理标识长度*/
+    public static final int AGENT_TAG_LENGTH = 32;
 }

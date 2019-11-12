@@ -29,7 +29,6 @@ public class QueryController {
                          @RequestParam String creditCardNo,
                          @RequestParam String phone){
         if(fansId == null) fansId=0L;
-
         try {
             String orderNo = queryService.gainVerificationCode(fansId, userName, idNo, creditCardNo, phone);
             return new Response(Response.SUCCESS, orderNo);
