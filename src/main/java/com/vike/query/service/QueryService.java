@@ -1,6 +1,7 @@
 package com.vike.query.service;
 
 import com.vike.query.common.QueryException;
+import com.vike.query.vo.WXPayJSAPIInfo;
 
 /**
  * @author: lsl
@@ -18,4 +19,9 @@ public interface QueryService {
     String queryCardData(String name, String idCard, String bankCard, String mobile, String code, String orderNo) throws QueryException;
 
     /**全部查询结果*/
+
+    /**统一下单*/
+    WXPayJSAPIInfo perOrder(String orderNo) throws QueryException;
+
+    /**查询订单*/
 }

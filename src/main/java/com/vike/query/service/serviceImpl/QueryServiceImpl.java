@@ -4,11 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.vike.query.common.*;
+import com.vike.query.component.WXPayComment;
 import com.vike.query.dao.FansRepository;
 import com.vike.query.entity.Fans;
 import com.vike.query.pojo.VerificationCodeRequest;
 import com.vike.query.service.QueryService;
 import com.vike.query.util.HttpUtil;
+import com.vike.query.util.RandomUtil;
+import com.vike.query.vo.WXPayJSAPIInfo;
+import com.vike.query.wxpay.WXPayUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +34,8 @@ public class QueryServiceImpl implements QueryService {
     private String APP_ID;
     @Value("${system.hp.app_secret:app_secret}")
     private String APP_SECRET;
+    @Autowired
+    WXPayComment wxPayComment;
     @Autowired
     FansRepository fansRepository;
 
@@ -109,8 +115,6 @@ public class QueryServiceImpl implements QueryService {
             }else if(status==1){
                 boolean isConsistent = data.getAsJsonPrimitive("isConsistent").getAsBoolean();
                 if(isConsistent){
-                    //TODO 创建订单并写入数据库
-
                     return true;
                 }
                 throw QueryException.fail("验证码错误");
@@ -146,6 +150,56 @@ public class QueryServiceImpl implements QueryService {
             return data.getAsJsonPrimitive("url").getAsString();
         }
         throw QueryException.fail("返回结果解析失败");
+    }
+
+    @Override
+    public WXPayJSAPIInfo perOrder(String orderNo) throws QueryException {
+        Map<String,String> paramsMap = new HashMap<>();
+        VerificationCodeRequest vc = LocalCache.getVerificatonCodeRequest(Long.valueOf(orderNo));
+        Optional<Fans> op = fansRepository.findById(vc.getFansId());
+        if(!op.isPresent()) throw QueryException.fail("系统异常");
+        paramsMap.put("body", "付费查询");
+        paramsMap.put("out_trade_no", orderNo);
+        paramsMap.put("fee_type", "CNY");
+        paramsMap.put("total_fee", "2999");
+        paramsMap.put("nonce_str", RandomUtil.UUID());
+        paramsMap.put("spbill_create_ip", "123.12.12.123");
+        paramsMap.put("trade_type", "JSAPI");
+        paramsMap.put("product_id", "1");
+        paramsMap.put("openid",op.get().getOpenId());
+        try {
+            Map<String, String> resp = wxPayComment.unifieOrder(paramsMap);
+            boolean res = wxPayComment.isSignatureValid(resp);
+            if(!res) throw QueryException.fail("返回数据校验失败");
+            String return_code = resp.get("return_code");
+            if("SUCCESS".equals(return_code)){
+                String result_code = resp.get("result_code");
+                if("SUCCESS".equals(result_code)){
+                    String prepay_id = resp.get("prepay_id");
+                    WXPayJSAPIInfo wxPayJSAPIInfo = new WXPayJSAPIInfo();
+                    Map<String,String> map = new HashMap<>();
+                    String timeStamp  = String.valueOf(System.currentTimeMillis()/1000);
+                    String nonceStr = RandomUtil.UUID();
+                    String prepay = "prepay_id="+prepay_id;
+                    map.put("appId",APP_ID);
+                    map.put("timeStamp",timeStamp);
+                    map.put("nonceStr",nonceStr);
+                    map.put("package",prepay);
+                    map.put("signType","MD5");
+                    String paySign = wxPayComment.generateSignature(map);
+                    wxPayJSAPIInfo.setAppId(APP_ID).setNonceStr(nonceStr).setSignType("MD5")
+                            .setTimeStamp(timeStamp).setPkg(prepay).setPaySign(paySign);
+                    return wxPayJSAPIInfo;
+                }
+            }else {
+                throw QueryException.fail("下单失败");
+            }
+        } catch (QueryException e){
+            throw e;
+        }catch (Exception e) {
+            throw QueryException.fail("下单失败");
+        }
+        return null;
     }
 
 

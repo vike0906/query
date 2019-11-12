@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.vike.query.common.GlobalConstant;
 import com.vike.query.util.HttpsUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -23,6 +24,8 @@ public class AccessTokenSync implements ApplicationListener<ApplicationReadyEven
     private String APP_ID;
     @Value("${system.wx.app_secret:app_secret}")
     private String APP_SECRET;
+    @Autowired
+    WXPayComment wxPayComment;
 
     private static AccessToken accessToken= null;
 
@@ -49,6 +52,8 @@ public class AccessTokenSync implements ApplicationListener<ApplicationReadyEven
 
         return new AccessToken(accessToken,expiresIn);
     }
+
+
     @Override
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
 
@@ -74,6 +79,8 @@ public class AccessTokenSync implements ApplicationListener<ApplicationReadyEven
                 }
             }
         }).start();
+
+        wxPayComment.init();
 
     }
 }
