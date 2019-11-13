@@ -6,13 +6,16 @@ import com.google.gson.JsonParser;
 import com.vike.query.common.*;
 import com.vike.query.component.WXPayComment;
 import com.vike.query.dao.FansRepository;
+import com.vike.query.dao.OrderRepository;
+import com.vike.query.dao.PayRepository;
 import com.vike.query.entity.Fans;
+import com.vike.query.entity.Order;
+import com.vike.query.entity.Pay;
 import com.vike.query.pojo.VerificationCodeRequest;
 import com.vike.query.service.QueryService;
 import com.vike.query.util.HttpUtil;
 import com.vike.query.util.RandomUtil;
 import com.vike.query.vo.WXPayJSAPIInfo;
-import com.vike.query.wxpay.WXPayUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +41,10 @@ public class QueryServiceImpl implements QueryService {
     WXPayComment wxPayComment;
     @Autowired
     FansRepository fansRepository;
+    @Autowired
+    OrderRepository orderRepository;
+    @Autowired
+    PayRepository payRepository;
 
     @Override
     public String gainVerificationCode(long fansId, String name, String idCard, String bankCard, String mobile) throws QueryException{
@@ -115,6 +122,12 @@ public class QueryServiceImpl implements QueryService {
             }else if(status==1){
                 boolean isConsistent = data.getAsJsonPrimitive("isConsistent").getAsBoolean();
                 if(isConsistent){
+                    Order order = new Order();
+                    order.setOrderNo(vc.getOrderNo()).setFansId(vc.getFansId()).setAgentTag(vc.getAgentTag())
+                            .setName(vc.getRealName()).setIdNo(vc.getIdNO()).setCreditCardNo(vc.getCreditCardNo())
+                            .setMobile(vc.getPhone()).setSerialNumber(vc.getSerialNumber()).setVerificationCode(code)
+                            .setPrice(wxPayComment.price()).setOrderStatus(1).setBonusStatus(1);
+                    orderRepository.save(order);
                     return true;
                 }
                 throw QueryException.fail("验证码错误");
@@ -161,7 +174,7 @@ public class QueryServiceImpl implements QueryService {
         paramsMap.put("body", "付费查询");
         paramsMap.put("out_trade_no", orderNo);
         paramsMap.put("fee_type", "CNY");
-        paramsMap.put("total_fee", "2999");
+        paramsMap.put("total_fee", String.valueOf(wxPayComment.price()));
         paramsMap.put("nonce_str", RandomUtil.UUID());
         paramsMap.put("spbill_create_ip", "123.12.12.123");
         paramsMap.put("trade_type", "JSAPI");
@@ -169,10 +182,10 @@ public class QueryServiceImpl implements QueryService {
         paramsMap.put("openid",op.get().getOpenId());
         try {
             Map<String, String> resp = wxPayComment.unifieOrder(paramsMap);
-            boolean res = wxPayComment.isSignatureValid(resp);
-            if(!res) throw QueryException.fail("返回数据校验失败");
             String return_code = resp.get("return_code");
             if("SUCCESS".equals(return_code)){
+                boolean res = wxPayComment.isSignatureValid(resp);
+                if(!res) throw QueryException.fail("返回数据校验失败");
                 String result_code = resp.get("result_code");
                 if("SUCCESS".equals(result_code)){
                     String prepay_id = resp.get("prepay_id");
@@ -189,6 +202,9 @@ public class QueryServiceImpl implements QueryService {
                     String paySign = wxPayComment.generateSignature(map);
                     wxPayJSAPIInfo.setAppId(APP_ID).setNonceStr(nonceStr).setSignType("MD5")
                             .setTimeStamp(timeStamp).setPkg(prepay).setPaySign(paySign);
+                    Pay pay = new Pay();
+                    pay.setOrderNo(orderNo).setWay(1).setPerpayId(prepay_id).setTotalFee(wxPayComment.price()).setStatus("init");
+                    payRepository.save(pay);
                     return wxPayJSAPIInfo;
                 }
             }else {
@@ -200,6 +216,54 @@ public class QueryServiceImpl implements QueryService {
             throw QueryException.fail("下单失败");
         }
         return null;
+    }
+
+    @Override
+    public boolean orderQuery(String orderNo) throws QueryException {
+        Optional<Pay> op = payRepository.findPayByOrderNo(orderNo);
+        if(op.isPresent()){
+            Pay pay = op.get();
+            if("SUCCESS".equals(pay.getStatus())){
+                return true;
+            }else if("init".equals(pay.getStatus())){
+                /**查询微信平台*/
+                Map<String,String> paramsMap = new HashMap<>();
+                paramsMap.put("out_trade_no",orderNo);
+                paramsMap.put("nonce_str",RandomUtil.UUID());
+                try {
+                    Map<String, String> resp = wxPayComment.orderQuery(paramsMap);
+                    String return_code = resp.get("return_code");
+                    if("SUCCESS".equals(return_code)){
+                        boolean res = wxPayComment.isSignatureValid(resp);
+                        if(!res) throw QueryException.fail("返回数据校验失败");
+                        String result_code = resp.get("result_code");
+                        if("SUCCESS".equals(result_code)){
+                            String trade_state = resp.get("trade_state");
+                            if("SUCCESS".equals(trade_state)){
+                                String total_fee = resp.get("total_fee");
+                                payRepository.updateStatus(pay.getId(),trade_state,Integer.parseInt(total_fee));
+                                orderRepository.updateStatusAndBonus(Long.valueOf(orderNo),3,2);
+                                return total_fee.equals(String.valueOf(pay.getTotalFee()));
+                            }else {
+                                payRepository.updateStatus(pay.getId(),trade_state,0);
+                                return false;
+                            }
+                        }
+                    }else {
+                        throw QueryException.fail("下单失败");
+                    }
+                } catch (QueryException e){
+                    throw e;
+                }catch (Exception e) {
+                    throw QueryException.fail("创建订单查询失败");
+                }
+            }else {
+                return false;
+            }
+        }else {
+            throw QueryException.fail("系统异常");
+        }
+        return false;
     }
 
 

@@ -75,6 +75,21 @@ public class QueryController {
     //TODO 下单
 
     /**查询支付结果*/
+    @PostMapping("query")
+    public Response check(@RequestParam String orderNo){
+        try {
+            boolean b = queryService.orderQuery(orderNo);
+            if(b){
+                log.info("订单：{}已支付",orderNo);
+                return new Response(Response.SUCCESS,"已支付");
+            }else {
+                return new Response(Response.ERROR, "未支付");
+            }
+
+        }catch (QueryException e){
+            return new Response(Response.ERROR, e.getMessage());
+        }
+    }
 
     /**验证通过，查询并返回查询结果*/
 

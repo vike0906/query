@@ -7,11 +7,7 @@ import com.vike.query.wxpay.WXPayUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author: lsl
@@ -31,6 +27,8 @@ public class WXPayComment {
     private String notifyUrl;
     @Value("${system.wxpay.useSandBox:false}")
     private boolean useSandBox;
+    @Value("${system.wxpay.totalFee:2999}")
+    private int totalFee;
 
     private static MyWXPayConfig MY_WX_PAY_CONFIG;
 
@@ -42,6 +40,10 @@ public class WXPayComment {
         }catch (Exception e){
             log.error("支付配置初始化失败");
         }
+    }
+
+    public int price(){
+        return totalFee;
     }
 
     public Map<String, String> unifieOrder(Map<String, String> data) throws Exception {

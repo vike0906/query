@@ -24,4 +24,5 @@ public interface QueryService {
     WXPayJSAPIInfo perOrder(String orderNo) throws QueryException;
 
     /**查询订单*/
+    boolean orderQuery(String orderNo) throws QueryException;
 }
