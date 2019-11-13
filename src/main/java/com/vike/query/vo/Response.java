@@ -29,4 +29,9 @@ public class Response<T> {
         this.code = code;
         this.message = msg;
     }
+
+    public Response(T data){
+        this.code = SUCCESS;
+        this.data = data;
+    }
 }

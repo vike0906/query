@@ -3,6 +3,7 @@ package com.vike.query.controller;
 import com.vike.query.common.QueryException;
 import com.vike.query.service.QueryService;
 import com.vike.query.vo.Response;
+import com.vike.query.vo.WXPayJSAPIInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,12 +40,19 @@ public class QueryController {
 
     /**创建查询订单*/
     @PostMapping("check")
-    public Response check(@RequestParam String orderNo, @RequestParam String code){
+    public Response<WXPayJSAPIInfo> check(@RequestParam String orderNo, @RequestParam String code){
         try {
-            queryService.checkVerificationCode(orderNo, code);
-            return new Response(Response.SUCCESS,"验证通过");
+            boolean b = queryService.checkVerificationCode(orderNo, code);
+            if(b){
+                log.info("验证码校验通过");
+                WXPayJSAPIInfo wxPayJSAPIInfo = queryService.perOrder(orderNo);
+                return new Response<>(wxPayJSAPIInfo);
+            }else {
+                return new Response<>(Response.ERROR, "验证码校验失败");
+            }
+
         }catch (QueryException e){
-            return new Response(Response.ERROR, e.getMessage());
+            return new Response<>(Response.ERROR, e.getMessage());
         }
     }
 

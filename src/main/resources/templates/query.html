@@ -89,7 +89,7 @@
                     "appId":data.appId,     //公众号名称，由商户传入
                     "timeStamp":data.timeStamp,         //时间戳，自1970年以来的秒数
                     "nonceStr":data.nonceStr, //随机串
-                    "package":data.packageStr,
+                    "package":data.pkg,
                     "signType":data.signType,         //微信签名方式：
                     "paySign":data.paySign//微信签名
                 },
@@ -144,7 +144,7 @@
         var params = {orderNo:orderNo, code:authCode};
         ajaxPost('/query/check', params, function (response) {
             $.hideLoading();
-            if(response.code == 1){
+            if(response.code == 0){
                 $.toast(response.message,'success');
                 // 获取appId，timeStamp，nonceStr， package， signType， paySign 发起支付
                 console.log(response.data);
