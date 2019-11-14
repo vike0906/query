@@ -10,7 +10,6 @@ $(function(){
 });
 
 function ajaxPost(url, params, success) {
-    $.showLoading();
     $.ajax({
         url: url,
         type: 'POST',

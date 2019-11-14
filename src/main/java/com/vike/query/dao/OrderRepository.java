@@ -14,8 +14,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface OrderRepository extends JpaRepository<Order,Long>, JpaSpecificationExecutor<Order> {
 
     @Modifying
-    @Query(value = "update wx_order set status = ?2 where id = ?1 and status = 1",nativeQuery = true)
-    int updateStatus(long id, int status);
+    @Query(value = "update wx_order set status = ?2 where id = ?1 and status = 3",nativeQuery = true)
+    int updateOrderStatus(long id, int status);
 
     @Modifying
     @Query(value = "update wx_order set order_status = ?2, bonus_status=?3 where id = ?1 and order_status = 1 and bonus_status = 1",nativeQuery = true)

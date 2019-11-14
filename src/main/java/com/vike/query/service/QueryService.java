@@ -16,7 +16,7 @@ public interface QueryService {
     boolean checkVerificationCode(String orderNo, String code) throws QueryException;
 
     /**查询结果*/
-    String queryCardData(String name, String idCard, String bankCard, String mobile, String code, String orderNo) throws QueryException;
+    String queryCardData(String code, String orderNo) throws QueryException;
 
     /**全部查询结果*/
 

@@ -57,14 +57,10 @@ public class QueryController {
     }
 
     @PostMapping("summit")
-    public Response summit(@RequestParam String userName,
-                         @RequestParam String idNo,
-                         @RequestParam String creditCardNo,
-                         @RequestParam String phone,
-                         @RequestParam String code,
+    public Response summit(@RequestParam String code,
                          @RequestParam String orderNo){
         try {
-            String url = queryService.queryCardData(userName, idNo, creditCardNo, phone, code, orderNo);
+            String url = queryService.queryCardData( code, orderNo);
             return new Response(Response.SUCCESS, url);
         }catch (QueryException e){
             return new Response(Response.ERROR, e.getMessage());

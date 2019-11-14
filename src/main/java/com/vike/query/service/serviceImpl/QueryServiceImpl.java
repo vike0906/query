@@ -8,9 +8,11 @@ import com.vike.query.component.WXPayComment;
 import com.vike.query.dao.FansRepository;
 import com.vike.query.dao.OrderRepository;
 import com.vike.query.dao.PayRepository;
+import com.vike.query.dao.QueryRepository;
 import com.vike.query.entity.Fans;
 import com.vike.query.entity.Order;
 import com.vike.query.entity.Pay;
+import com.vike.query.entity.Query;
 import com.vike.query.pojo.VerificationCodeRequest;
 import com.vike.query.service.QueryService;
 import com.vike.query.util.HttpUtil;
@@ -45,6 +47,8 @@ public class QueryServiceImpl implements QueryService {
     OrderRepository orderRepository;
     @Autowired
     PayRepository payRepository;
+    @Autowired
+    QueryRepository queryRepository;
 
     @Override
     public String gainVerificationCode(long fansId, String name, String idCard, String bankCard, String mobile) throws QueryException{
@@ -138,16 +142,16 @@ public class QueryServiceImpl implements QueryService {
     }
 
     @Override
-    public String queryCardData(String name, String idCard, String bankCard, String mobile, String code, String orderNo) throws QueryException {
+    public String queryCardData(String code, String orderNo) throws QueryException {
         Map<String,String> paramsMap = new HashMap<>();
         VerificationCodeRequest vc = LocalCache.getVerificatonCodeRequest(Long.valueOf(orderNo));
         paramsMap.put("account", APP_ID);
-        paramsMap.put("bankCard", bankCard);
-        paramsMap.put("idCard", idCard);
+        paramsMap.put("bankCard", vc.getCreditCardNo());
+        paramsMap.put("idCard", vc.getIdNO());
         paramsMap.put("identifyingCode", code);
-        paramsMap.put("mobile", mobile);
-        paramsMap.put("name", name);
-        paramsMap.put("orderNo", orderNo);
+        paramsMap.put("mobile", vc.getPhone());
+        paramsMap.put("name", vc.getRealName());
+        paramsMap.put("orderNo", String.valueOf(vc.getOrderNo()));
         paramsMap.put("serialNumber", vc.getSerialNumber());
         String sign = HihippoHelp.sign(paramsMap,APP_SECRET);
         log.info("构造sign:{}",sign);
@@ -160,7 +164,12 @@ public class QueryServiceImpl implements QueryService {
 
         JsonObject data = parseResponse(response);
         if(data!=null){
-            return data.getAsJsonPrimitive("url").getAsString();
+            orderRepository.updateOrderStatus(Long.valueOf(orderNo),4);
+            String href = data.getAsJsonPrimitive("url").getAsString();
+            Query query = new Query();
+            query.setFansId(vc.getFansId()).setOrderNo(vc.getOrderNo()).setHref(href);
+            queryRepository.save(query);
+            return href;
         }
         throw QueryException.fail("返回结果解析失败");
     }
