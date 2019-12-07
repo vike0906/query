@@ -282,7 +282,7 @@ public class QueryServiceImpl implements QueryService {
         String code = jsonObject.getAsJsonPrimitive("code").getAsString();
         String result = jsonObject.getAsJsonPrimitive("result").getAsString();
         JsonObject data = jsonObject.getAsJsonObject("data");
-        if("0".equals(code)&&"0000".equals(result)){
+        if("0000".equals(code)&&"0".equals(result)){
             return data;
         }
         return null;

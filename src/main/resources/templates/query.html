@@ -144,8 +144,8 @@
             $.toast("请先获取验证码","cancel");
             return;
         }
-        if(authCode.length==0||authCode.length!=6){
-            $.toast(authCode.length==0?"验证码不能为空":"验证码格式错误","cancel");
+        if(authCode.length==0){
+            $.toast("验证码不能为空","cancel");
             return;
         }
 

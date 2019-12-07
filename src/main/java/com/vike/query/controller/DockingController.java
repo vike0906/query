@@ -1,6 +1,5 @@
 package com.vike.query.controller;
 
-import com.vike.query.component.AccessTokenSync;
 import com.vike.query.entity.Fans;
 import com.vike.query.pojo.WxMessage;
 import com.vike.query.service.FansService;
@@ -78,7 +77,7 @@ public class DockingController {
             StringWriter swr = new StringWriter();
             if("event".equals(wxMessage.getMsgType())){
                 wxMessage.setMsgType("text");
-                wxMessage.setContent("欢迎关注PA！一秒查询征信信息。");
+                wxMessage.setContent("欢迎关注友信快查！一秒查询征信信息。");
                 Date currentTime = new Date(System.currentTimeMillis());
                 if("subscribe".equals(wxMessage.getEvent())){
                     Fans fans = new Fans();

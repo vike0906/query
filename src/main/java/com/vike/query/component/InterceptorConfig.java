@@ -30,6 +30,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
         unInterceptor.add("/**/*.js");
 
         unInterceptor.add("/");
+        unInterceptor.add("/wx");
         unInterceptor.add("/view/index");
         unInterceptor.add("/view/history");
         unInterceptor.add("/view/invite");

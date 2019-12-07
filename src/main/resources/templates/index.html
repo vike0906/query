@@ -58,25 +58,25 @@
         </a>
     </div>
 </div>
-<input  th:value="${agentTag}" id="agentTag">
-<input  th:value="${fansId}" id="fansId">
+<input type="hidden" th:value="${agentTag}" id="agentTag">
+<input type="hidden" th:value="${fansId}" id="fansId">
 
 <script>
     window.onload=function(){
-        var ua = navigator.userAgent.toLowerCase();//获取判断用的对象
-        if (ua.match(/MicroMessenger/i) == "micromessenger") {
-            var fansId =$('#fansId').val();
-            var agentTag =$('#agentTag').val();
-            if(Number(fansId) == -1){
-                if(typeof agentTag == 'string' && agentTag.length > 0){
-                    window.location.href='https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxe4d7a76e1414928a&redirect_uri=http%3A%2F%2F106.13.222.152%2Fview%2Findex&response_type=code&scope=snsapi_base&state='+agentTag+'&connect_redirect=1#wechat_redirect'
-                }else {
-                    alterFix("本应用暂不对外开放，请通过代理链接访问");
-                }
-            }
-        }else {
-            alterFix('本应用目前只支持微信浏览器访问，请在微信浏览器内部打开');
-        }
+        // var ua = navigator.userAgent.toLowerCase();//获取判断用的对象
+        // if (ua.match(/MicroMessenger/i) == "micromessenger") {
+        //     var fansId =$('#fansId').val();
+        //     var agentTag =$('#agentTag').val();
+        //     if(Number(fansId) == -1){
+        //         if(typeof agentTag == 'string' && agentTag.length > 0){
+        //             window.location.href='https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxe4d7a76e1414928a&redirect_uri=http%3A%2F%2F106.13.222.152%2Fview%2Findex&response_type=code&scope=snsapi_base&state='+agentTag+'&connect_redirect=1#wechat_redirect'
+        //         }else {
+        //             alterFix("本应用暂不对外开放，请通过代理链接访问");
+        //         }
+        //     }
+        // }else {
+        //     alterFix('本应用目前只支持微信浏览器访问，请在微信浏览器内部打开');
+        // }
     };
 
     function alterFix(message) {
