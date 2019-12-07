@@ -31,6 +31,55 @@ function ajaxPost(url, params, success) {
 
     });
 }
+function baseQuery() {
+    var userName = $("#userName").val();
+    var idNo = $("#idNo").val();
+    var creditCardNo = $("#creditCardNo").val();
+    var phone = $("#phone").val();
+
+    if(userName.length==0){
+        $.toast("用户名不能为空","cancel");
+        return 1;
+    }
+    if(idNo.length==0){
+        $.toast("身份证号不能为空","cancel");
+        return 1;
+    }
+    if(creditCardNo.length==0){
+        $.toast("信用卡号不能为空","cancel");
+        return 1;
+    }
+    if(phone.length==0){
+        $.toast("手机号不能为空","cancel");
+        return 1;
+    }
+
+
+    var reg =/^[\u4e00-\u9fa5]{2,4}$/;
+    if(reg.test(userName)==false){
+        $.toast("请输入真实姓名","cancel");
+        return 1;
+    }
+
+    var reg = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/;
+    if(reg.test(idNo)==false){
+        $.toast("身份证号输入不合法","cancel");
+        return 1;
+    }
+
+    if(creditCardNo.length<12||creditCardNo.length>19){
+        $.toast("信用卡号输入错误","cancel");
+        return 1;
+    }
+
+    var reg = /^[1][3,4,5,7,8,9][0-9]{9}$/;
+    if(reg.test(phone)==false){
+        $.toast("请输入正确的手机号","cancel");
+        return 1;
+    }
+    return 0;
+
+}
 
 /**
  window.onload=function(){
