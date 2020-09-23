@@ -1,11 +1,14 @@
 package com.vike.query.component;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.vike.query.common.GlobalConstant;
 import com.vike.query.entity.Fans;
 import com.vike.query.entity.FansInfo;
+import com.vike.query.pojo.Button;
+import com.vike.query.pojo.Menu;
 import com.vike.query.service.FansService;
 import com.vike.query.util.HttpsUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +36,7 @@ public class WXApiInfoComment {
     @Autowired
     FansService fansService;
 
+
     /**通过网页授权code获取用户id*/
     public long getFansIdByCode(String code, String state){
 
@@ -54,6 +58,63 @@ public class WXApiInfoComment {
         return menuUrl;
     }
 
+    private static String createUrlWithAuthorize(String url, String state, String appId){
+        try {
+            url = URLEncoder.encode(url,"UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        String menuUrl = String.format(GlobalConstant.CODE_MENU_URL, appId, url, state);
+        log.info("组装链接为：{}", menuUrl);
+        return menuUrl;
+    }
+
+    private static AccessToken getAccessToken(String appId, String appSecret){
+
+        String url = String.format(GlobalConstant.ACCESS_TOKEN_URL, appId, appSecret);
+
+        String result = HttpsUtil.httpsRequest(url, HttpsUtil.METHOD_GET);
+
+        log.info("取得AccessToken为：{}", result);
+
+        JsonParser jsonParser = new JsonParser();
+        JsonObject jsonObject = jsonParser.parse(result).getAsJsonObject();
+        String accessToken = jsonObject.getAsJsonPrimitive("access_token").getAsString();
+        int expiresIn = jsonObject.getAsJsonPrimitive("expires_in").getAsInt();
+
+        return new AccessToken(accessToken,expiresIn);
+    }
+
+    public static void main(String [] args){
+
+        String appid = "wxe4d7a76e1414928a";
+        String appSecret = "09496ecd52c61b453f8f96183d862acf";
+
+        AccessToken accessToken = getAccessToken(appid, appSecret);
+
+        String link = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxe4d7a76e1414928a&redirect_uri=https%3A%2F%2Fvike0906.com%2Fwx%2Fsb%2Finit&response_type=code&scope=snsapi_base&state=sxzq123456#wechat_redirect";
+        System.out.println(link);
+        Menu menu1 = new Menu("view","加入我们", link);
+        Menu menu2 = new Menu("view","了解更多", link);
+
+        Menu [] menus = {menu1,menu2};
+        Button button = new Button(menus);
+
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+        String s = gson.toJson(button);
+        log.info(s);
+
+        String url = String.format(GlobalConstant.CREATE_MENU_URL, accessToken.getAccessToken());
+
+        String result = HttpsUtil.httpsRequest(url, HttpsUtil.METHOD_POST, s);
+        log.info(result);
+//        try {
+//            String encode = URLEncoder.encode("https://vike0906.com/wx/sb/code2Token", "utf-8");
+//            System.out.println(encode);
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }
+    }
 
 
     /**
